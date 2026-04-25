@@ -1,0 +1,22 @@
+import { NextResponse } from 'next/server'
+
+export async function POST(request) {
+  const { password } = await request.json()
+  if (password === process.env.ADMIN_PASSWORD) {
+    const res = NextResponse.json({ success: true })
+    res.cookies.set('auth_token', 'authenticated', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
+    })
+    return res
+  }
+  return NextResponse.json({ error: 'වැරදි මුරපදය' }, { status: 401 })
+}
+
+export async function DELETE() {
+  const res = NextResponse.json({ success: true })
+  res.cookies.set('auth_token', '', { maxAge: 0 })
+  return res
+}

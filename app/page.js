@@ -1,247 +1,117 @@
 'use client'
-import { useState, useEffect, useCallback, useRef } from 'react'
-import SCHOOLS from '@/lib/schools'
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
-export default function Home() {
-  const [query, setQuery] = useState('')
-  const [selected, setSelected] = useState(null)
-  const [issues, setIssues] = useState([]) // issues for selected school
-  const [allCounts, setAllCounts] = useState({}) // schoolId -> {open, done}
-  const [newText, setNewText] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [adding, setAdding] = useState(false)
-  const taRef = useRef(null)
+export default function HomePage() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
 
-  const filtered = query
-    ? SCHOOLS.filter(s =>
-        s.name.toLowerCase().includes(query.toLowerCase()) ||
-        s.address.toLowerCase().includes(query.toLowerCase())
-      )
-    : SCHOOLS
-
-  // Load all issue counts on mount (for dots in sidebar)
   useEffect(() => {
-    fetch('/api/issues')
-      .then(r => r.json())
-      .then(data => {
-        if (!Array.isArray(data)) return
-        const counts = {}
-        data.forEach(i => {
-          if (!counts[i.school_id]) counts[i.school_id] = { open: 0, done: 0 }
-          i.done ? counts[i.school_id].done++ : counts[i.school_id].open++
-        })
-        setAllCounts(counts)
-      })
+    fetch('/api/stats').then(r => r.json()).then(d => { setStats(d); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
-  const loadIssues = useCallback(async (schoolId) => {
-    setLoading(true)
-    const res = await fetch(`/api/issues?school_id=${schoolId}`)
-    const data = await res.json()
-    setIssues(Array.isArray(data) ? data : [])
-    setLoading(false)
-  }, [])
-
-  const selectSchool = (school) => {
-    setSelected(school)
-    setNewText('')
-    loadIssues(school.id)
-  }
-
-  const addIssue = async () => {
-    if (!newText.trim() || !selected || adding) return
-    setAdding(true)
-    const res = await fetch('/api/issues', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ school_id: selected.id, text: newText.trim() }),
-    })
-    const issue = await res.json()
-    if (res.ok) {
-      setIssues(prev => [issue, ...prev])
-      setAllCounts(prev => ({
-        ...prev,
-        [selected.id]: { open: (prev[selected.id]?.open || 0) + 1, done: prev[selected.id]?.done || 0 }
-      }))
-      setNewText('')
-    }
-    setAdding(false)
-  }
-
-  const toggleIssue = async (issue) => {
-    const res = await fetch(`/api/issues/${issue.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ done: !issue.done }),
-    })
-    if (res.ok) {
-      setIssues(prev => prev.map(i => i.id === issue.id ? { ...i, done: !i.done } : i))
-      setAllCounts(prev => {
-        const c = { ...prev[selected.id] }
-        if (issue.done) { c.open++; c.done-- } else { c.done++; c.open-- }
-        return { ...prev, [selected.id]: c }
-      })
-    }
-  }
-
-  const deleteIssue = async (issue) => {
-    const res = await fetch(`/api/issues/${issue.id}`, { method: 'DELETE' })
-    if (res.ok) {
-      setIssues(prev => prev.filter(i => i.id !== issue.id))
-      setAllCounts(prev => {
-        const c = { ...prev[selected.id] }
-        issue.done ? c.done-- : c.open--
-        return { ...prev, [selected.id]: c }
-      })
-    }
-  }
-
-  const totalOpen = Object.values(allCounts).reduce((a, c) => a + (c.open || 0), 0)
-  const totalDone = Object.values(allCounts).reduce((a, c) => a + (c.done || 0), 0)
-
-  const open = issues.filter(i => !i.done)
-  const done = issues.filter(i => i.done)
+  const pct = stats ? Math.round((stats.done / (stats.total || 1)) * 100) : 0
 
   return (
-    <>
-      {/* HEADER */}
-      <div className="header">
-        <div className="hemblem">🏫</div>
-        <div className="htitle">
-          <h1>School Issue Tracker</h1>
-          <p className="si">මාවනැල්ල අධ්‍යාපන කලාපය — 2025</p>
-        </div>
-        <div className="hstats">
-          <div className="schip"><div className="n">{SCHOOLS.length}</div><div className="l">Schools</div></div>
-          <div className="schip"><div className="n" style={{color:'#f87171'}}>{totalOpen}</div><div className="l">Open</div></div>
-          <div className="schip"><div className="n" style={{color:'#4ade80'}}>{totalDone}</div><div className="l">Solved</div></div>
-        </div>
-      </div>
-
-      {/* BODY */}
-      <div className="body">
-        {/* SIDEBAR */}
-        <div className="sidebar">
-          <div className="sbox">
-            <div className="swrap">
-              <span className="sico">🔍</span>
-              <input
-                type="text"
-                placeholder="පාසල් නම සොයන්න..."
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-              />
-            </div>
+    <div className="home-page">
+      {/* NAV */}
+      <nav className="nav">
+        <a href="/" className="nav-brand">
+          <div className="nav-emblem">🏫</div>
+          <div>
+            <div className="nav-title">School Tracker</div>
+            <div className="nav-subtitle si">මාවනැල්ල අධ්‍යාපන කලාපය</div>
           </div>
-          <div className="slist">
-            {filtered.length === 0 && <div className="nois">සොයාගත නොහැකිය</div>}
-            {filtered.map(s => {
-              const c = allCounts[s.id]
-              const isActive = selected?.id === s.id
-              return (
-                <div key={s.id} className={`sitem ${isActive ? 'active' : ''}`} onClick={() => selectSchool(s)}>
-                  <div className="sn">{s.name}</div>
-                  <div className="sa">{s.address}</div>
-                  <div className="sb">{s.type || 'N/A'} · {s.medium}</div>
-                  {c && (c.open > 0 || c.done > 0) && (
-                    <div className="idot">
-                      {c.open > 0 && <div className="dr" />}
-                      {c.done > 0 && <div className="dg" />}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
+        </a>
+        <div className="nav-actions">
+          <Link href="/login" className="btn btn-gold btn-sm">🔐 පිවිසෙන්න</Link>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <section className="hero">
+        <div className="hero-badge">📋 2025 ශාලා නාමාවලිය</div>
+        <h1 className="serif">School Issue Tracker</h1>
+        <p className="hero-sub si">මාවනැල්ල අධ්‍යාපන කලාපයේ පාසල් ගැටළු නිරීක්ෂණ පද්ධතිය</p>
+        <div className="hero-actions">
+          <Link href="/login" className="btn btn-gold">🔐 පිවිසෙන්න</Link>
+          <a href="#stats" className="btn btn-ghost" style={{color:'rgba(255,255,255,0.8)', borderColor:'rgba(255,255,255,0.25)'}}>
+            📊 සංඛ්‍යාලේඛන
+          </a>
+        </div>
+      </section>
+
+      {/* STATS */}
+      <section className="stats-section" id="stats">
+        <h2 className="section-title serif">සමස්ත ප්‍රගතිය</h2>
+
+        {/* Progress bar */}
+        <div style={{background:'var(--white)',borderRadius:16,padding:'20px 24px',border:'1.5px solid var(--border)',marginBottom:20,boxShadow:'var(--shadow)'}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:10}}>
+            <span style={{fontFamily:'Noto Sans Sinhala',fontSize:13,color:'var(--muted)'}}>විසඳූ ගැටළු</span>
+            <span style={{fontWeight:700,color:'var(--navy)',fontSize:14}}>{loading ? '...' : `${pct}%`}</span>
+          </div>
+          <div style={{background:'var(--cream2)',borderRadius:20,height:10,overflow:'hidden'}}>
+            <div style={{
+              height:'100%', borderRadius:20, transition:'width 1s ease',
+              width:`${pct}%`,
+              background:'linear-gradient(90deg, #15803d, #22c55e)'
+            }}/>
+          </div>
+          <div style={{display:'flex',justifyContent:'space-between',marginTop:8}}>
+            <span style={{fontSize:12,color:'var(--muted)'}}>
+              {loading ? '' : `${stats?.done || 0} / ${stats?.total || 0} ගැටළු`}
+            </span>
+            <span style={{fontSize:12,color:'var(--muted)',fontFamily:'Noto Sans Sinhala'}}>
+              {loading ? '' : `${stats?.schoolsAllDone || 0} පාසල් සම්පූර්ණයි`}
+            </span>
           </div>
         </div>
 
-        {/* MAIN */}
-        <div className="main">
-          {!selected ? (
-            <div className="estate">
-              <div className="ico">🏫</div>
-              <p>පාසලක් තෝරන්න</p>
+        <div className="stats-grid">
+          {[
+            { icon:'🏫', num: 134, label:'මුළු පාසල් ගණන', color:'' },
+            { icon:'📋', num: loading ? '...' : stats?.total ?? 0, label:'මුළු ගැටළු ගණන', color:'gold' },
+            { icon:'⚠️', num: loading ? '...' : stats?.open ?? 0, label:'විසඳීමට ඇති', color:'red' },
+            { icon:'✅', num: loading ? '...' : stats?.done ?? 0, label:'විසඳූ ගැටළු', color:'green' },
+            { icon:'🏛️', num: loading ? '...' : stats?.schoolsWithIssues ?? 0, label:'ගැටළු ඇති පාසල්', color:'' },
+            { icon:'🌟', num: loading ? '...' : stats?.schoolsAllDone ?? 0, label:'සම්පූර්ණ පාසල්', color:'green' },
+          ].map((s,i) => (
+            <div key={i} className="stat-card">
+              <div className="stat-icon">{s.icon}</div>
+              <div className={`stat-num ${s.color}`}>{s.num}</div>
+              <div className="stat-label">{s.label}</div>
             </div>
-          ) : (
-            <>
-              {/* School info */}
-              <div className="shead">
-                <h2>{selected.name}</h2>
-                <div style={{fontSize:'12px',color:'rgba(255,255,255,.65)',fontFamily:'var(--font-si),sans-serif',marginTop:'2px'}}>{selected.address}</div>
-                <div className="smeta">
-                  <div className="mitem"><span>විදුහල්පති:</span><strong>{selected.principal || '-'}</strong></div>
-                  <div className="mitem"><span>වර්ගය:</span><strong>{selected.type || '-'}</strong></div>
-                  <div className="mitem"><span>මාධ්‍යය:</span><strong>{selected.medium}</strong></div>
-                  <div className="mitem"><span>සිසුන්:</span><strong>{(selected.students_m + selected.students_f).toLocaleString()}</strong></div>
-                  <div className="mitem"><span>ගුරු:</span><strong>{selected.teachers}</strong></div>
-                  <div className="mitem"><span>ශ්‍රේණිය:</span><strong>{selected.classification}</strong></div>
-                </div>
-              </div>
-
-              {/* Section title */}
-              <div className="stitle">ගැටළු <span>{issues.length}</span></div>
-
-              {/* Add issue */}
-              <div className="addi">
-                <textarea
-                  ref={taRef}
-                  placeholder="නව ගැටළුවක් ලියන්න... (Ctrl+Enter)"
-                  value={newText}
-                  onChange={e => setNewText(e.target.value)}
-                  onKeyDown={e => { if (e.ctrlKey && e.key === 'Enter') addIssue() }}
-                />
-                <div className="arow">
-                  <button className="btn btns" onClick={() => setNewText('')}>මකන්න</button>
-                  <button className="btn btnp" onClick={addIssue} disabled={adding || !newText.trim()}>
-                    {adding ? 'Adding...' : 'ගැටළුව + '}
-                  </button>
-                </div>
-              </div>
-
-              {loading && <div className="loading">Loading...</div>}
-
-              {/* Open issues */}
-              {open.length > 0 && (
-                <div className="stitle" style={{fontSize:'13px',marginBottom:'9px'}}>
-                  විසඳීමට ඇති <span style={{background:'#dc2626'}}>{open.length}</span>
-                </div>
-              )}
-              {open.map(i => <IssueCard key={i.id} issue={i} onToggle={toggleIssue} onDelete={deleteIssue} />)}
-
-              {/* Done issues */}
-              {done.length > 0 && (
-                <div className="stitle" style={{fontSize:'13px',margin:'16px 0 9px',color:'#6b7280'}}>
-                  විසඳූ <span style={{background:'#16a34a'}}>{done.length}</span>
-                </div>
-              )}
-              {done.map(i => <IssueCard key={i.id} issue={i} onToggle={toggleIssue} onDelete={deleteIssue} />)}
-
-              {!loading && issues.length === 0 && <div className="nois">🎉 ගැටළු නොමැත</div>}
-            </>
-          )}
+          ))}
         </div>
-      </div>
-    </>
-  )
-}
+      </section>
 
-function IssueCard({ issue, onToggle, onDelete }) {
-  const d = new Date(issue.created_at).toLocaleDateString('si-LK')
-  return (
-    <div className={`icard ${issue.done ? 'done' : ''}`}>
-      <button className={`ick ${issue.done ? 'chk' : ''}`} onClick={() => onToggle(issue)}>
-        {issue.done ? '✓' : ''}
-      </button>
-      <div className="ibody">
-        <div className="itxt">{issue.text}</div>
-        <div className="imeta">
-          <span className={`ibadge ${issue.done ? 'bdone' : 'bopen'}`}>
-            {issue.done ? '✓ විසඳා ඇත' : '⚠ විසඳීමට ඇත'}
-          </span>
-          {d}
+      {/* FEATURES */}
+      <section className="features-section">
+        <h2 className="section-title serif">මෙම පද්ධතිය මගින්</h2>
+        <div className="features-grid">
+          {[
+            { icon:'🔍', title:'පාසල් සෙවීම', desc:'ඕනෑම පාසලක් ඉක්මනින් සොයා ගෙන එහි ගැටළු බලන්න' },
+            { icon:'📝', title:'ගැටළු ලේඛනය', desc:'ගුරු හිඟය, විද්‍යාගාර, පුස්තකාල, පරිගණක ගැටළු ලේඛනගත කරන්න' },
+            { icon:'✅', title:'විසඳීම සටහන් කිරීම', desc:'ගැටළු විසඳූ විට "Done" ලෙස සලකුණු කරන්න' },
+            { icon:'📊', title:'ප්‍රගති නිරීක්ෂණය', desc:'සමස්ත කලාපයේ ප්‍රගතිය තත්‍ය කාලයෙන් නිරීක්ෂණය කරන්න' },
+            { icon:'🔐', title:'ආරක්ෂිත ප්‍රවේශය', desc:'මුරපද ආරක්ෂාව සහිත ව්‍යවස්ථාපිත ප්‍රවේශය' },
+            { icon:'📱', title:'ජංගම හා PC', desc:'ජංගම දුරකථනය හෝ පරිගණකය ඕනෑම උපකරණයකින් භාවිත කරන්න' },
+          ].map((f,i) => (
+            <div key={i} className="feature-card">
+              <div className="feature-icon">{f.icon}</div>
+              <div className="feature-title">{f.title}</div>
+              <p className="feature-desc">{f.desc}</p>
+            </div>
+          ))}
         </div>
-      </div>
-      <button className="idel" onClick={() => onDelete(issue)}>✕</button>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="footer">
+        <p>© 2025 මාවනැල්ල අධ්‍යාපන කලාප කාර්යාලය — School Issue Tracker</p>
+      </footer>
     </div>
   )
 }
