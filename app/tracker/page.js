@@ -242,7 +242,7 @@ export default function TrackerPage() {
               const isMySchool = auth.role === 'school' && auth.schoolId === s.id
               return (
                 <div key={s.id} className={`school-item ${selected?.id === s.id ? 'active' : ''}`} onClick={() => selectSchool(s)}>
-                  {isMySchool && <div style={{position:'absolute',left:6,top:6,fontSize:10,background:'var(--gold)',color:selectedSchool?.id===s.id?'var(--navy)':'var(--navy)',borderRadius:4,padding:'1px 4px',fontWeight:700}}>MY</div>}
+                  {isMySchool && <div style={{position:'absolute',left:6,top:6,fontSize:10,background:'var(--gold)',color:'var(--navy)',borderRadius:4,padding:'1px 4px',fontWeight:700}}>MY</div>}
                   <div className="school-name" style={isMySchool?{paddingLeft:30}:{}}>{s.name}</div>
                   <div className="school-addr">{s.address} · {s.address_en}</div>
                   <div className="school-type">{s.type||'N/A'} · {s.medium}</div>
