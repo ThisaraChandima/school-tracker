@@ -407,3 +407,11 @@ body {
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
   .login-card { padding: 28px 20px; }
 }
+
+/* READONLY NOTICE */
+.readonly-notice {
+  background: var(--cream2); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;
+  font-size: 13px; color: var(--muted); display: flex; align-items: center;
+  gap: 4px; flex-wrap: wrap;
+}

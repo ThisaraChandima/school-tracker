@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase'
+import { isAuthenticated } from '@/lib/auth'
 
+// GET - public: anyone can view issues
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const school_id = searchParams.get('school_id')
@@ -11,7 +13,11 @@ export async function GET(request) {
   return NextResponse.json(data)
 }
 
+// POST - protected: only logged in users can add
 export async function POST(request) {
+  if (!isAuthenticated()) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const { school_id, text } = await request.json()
   if (!school_id || !text?.trim())
     return NextResponse.json({ error: 'school_id and text required' }, { status: 400 })
