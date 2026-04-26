@@ -415,3 +415,50 @@ body {
   font-size: 13px; color: var(--muted); display: flex; align-items: center;
   gap: 4px; flex-wrap: wrap;
 }
+
+/* ── LOGIN TABS ── */
+.login-tabs {
+  display: flex; background: var(--cream2); border-radius: 12px; padding: 4px;
+  margin-bottom: 22px; gap: 4px;
+}
+.login-tab {
+  flex: 1; padding: 9px; border: none; border-radius: 9px; cursor: pointer;
+  font-size: 13px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+  background: transparent; color: var(--muted); transition: all 0.18s;
+}
+.login-tab.active { background: var(--white); color: var(--navy); box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+
+/* ── SCHOOL DROPDOWN ── */
+.school-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--white); border: 1.5px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow-lg); z-index: 50; max-height: 240px; overflow-y: auto;
+}
+.dropdown-item {
+  padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--cream2); transition: background 0.1s;
+}
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:hover { background: var(--cream); }
+.dropdown-name { font-size: 13px; font-weight: 600; color: var(--text); }
+.dropdown-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.dropdown-empty { padding: 14px; text-align: center; color: var(--muted); font-size: 13px; }
+
+/* ── SELECTED SCHOOL BADGE ── */
+.selected-school-badge {
+  margin-top: 8px; padding: 8px 12px; background: #f0fdf4; border: 1.5px solid #bbf7d0;
+  border-radius: 10px; font-size: 12px; color: var(--green); font-family: 'Noto Sans Sinhala', sans-serif;
+}
+
+/* READONLY NOTICE */
+.readonly-notice {
+  background: var(--cream2); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: var(--muted);
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+
+/* STAT CARD (for admin page) */
+.stat-card {
+  background: var(--white); border-radius: 16px; padding: 20px;
+  border: 1.5px solid var(--border); box-shadow: var(--shadow); text-align: center; transition: transform 0.2s;
+}
+.stat-card:hover { transform: translateY(-2px); }

@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase'
-import { isAuthenticated } from '@/lib/auth'
+import { getAuthInfo } from '@/lib/auth'
 
-// GET - public: anyone can view issues
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const school_id = searchParams.get('school_id')
@@ -13,17 +12,22 @@ export async function GET(request) {
   return NextResponse.json(data)
 }
 
-// POST - protected: only logged in users can add
 export async function POST(request) {
-  if (!isAuthenticated()) {
+  const auth = getAuthInfo()
+  const { school_id, text, image_url } = await request.json()
+
+  if (!auth.isAdmin && !(auth.isSchool && auth.schoolId === Number(school_id))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
-  const { school_id, text } = await request.json()
-  if (!school_id || !text?.trim())
+  if (!school_id || !text?.trim()) {
     return NextResponse.json({ error: 'school_id and text required' }, { status: 400 })
+  }
+
   const { data, error } = await supabase
-    .from('issues').insert({ school_id: Number(school_id), text: text.trim(), done: false })
+    .from('issues')
+    .insert({ school_id: Number(school_id), text: text.trim(), done: false, image_url: image_url || null })
     .select().single()
+
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json(data, { status: 201 })
 }
