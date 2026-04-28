@@ -12,7 +12,7 @@
 Add these 3 variables:
 - `SUPABASE_URL` = your project URL
 - `SUPABASE_SERVICE_KEY` = service_role key
-- `ADMIN_PASSWORD` = any password you choose (e.g. school2026)
+- `ADMIN_PASSWORD` = any password you choose (e.g. school2025)
 
 ### 3. GitHub → Vercel
 - Push code to GitHub
