@@ -43,3 +43,61 @@ CREATE POLICY "Allow all accounts" ON school_accounts FOR ALL USING (true) WITH 
 -- (Cannot create bucket via SQL, do it manually in Supabase dashboard)
 
 SELECT 'Setup complete! Now create storage bucket: issue-images (public)' as message;
+
+-- ============================================================
+-- ADD THIS SECTION to your Supabase SQL Editor
+-- (Run separately if you already ran the original setup)
+-- ============================================================
+
+-- School detail overrides (admin-editable)
+CREATE TABLE IF NOT EXISTS school_overrides (
+  school_id      INTEGER PRIMARY KEY,
+  principal      TEXT,
+  type           TEXT,
+  medium         TEXT,
+  students_m     INTEGER,
+  students_f     INTEGER,
+  teachers       INTEGER,
+  classification TEXT,
+  updated_at     TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE school_overrides ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all overrides" ON school_overrides;
+CREATE POLICY "Allow all overrides" ON school_overrides FOR ALL USING (true) WITH CHECK (true);
+
+-- ── SCHOOL DETAILS OVERRIDES TABLE ──
+-- Run this in Supabase SQL Editor
+CREATE TABLE IF NOT EXISTS school_details (
+  school_id     INTEGER PRIMARY KEY,
+  principal     TEXT,
+  type          TEXT,
+  medium        TEXT,
+  students_m    INTEGER,
+  students_f    INTEGER,
+  teachers      INTEGER,
+  classification TEXT,
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE school_details ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all school_details" ON school_details;
+CREATE POLICY "Allow all school_details" ON school_details FOR ALL USING (true) WITH CHECK (true);
+
+-- ── SCHOOL DETAILS OVERRIDES TABLE ──
+-- Admin can edit these to override the hardcoded Excel data
+CREATE TABLE IF NOT EXISTS school_details (
+  school_id     INTEGER PRIMARY KEY,
+  principal     TEXT,
+  type          TEXT,
+  medium        TEXT,
+  students_m    INTEGER,
+  students_f    INTEGER,
+  teachers      INTEGER,
+  classification TEXT,
+  updated_at    TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE school_details ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all school_details" ON school_details;
+CREATE POLICY "Allow all school_details" ON school_details FOR ALL USING (true) WITH CHECK (true);

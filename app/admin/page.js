@@ -4,11 +4,16 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import SCHOOLS from '@/lib/schools'
 
-const TABS = ['Access Control', 'Issue Stats', 'Bulk Actions']
+const TABS = ['Access Control', 'Issue Stats', 'Bulk Actions', 'Edit School Details']
 
 export default function AdminPage() {
   const [tab, setTab] = useState(0)
   const [accounts, setAccounts] = useState([])
+  const [overrides, setOverrides] = useState({})
+  const [editSchool, setEditSchool] = useState(null)  // school being edited
+  const [editForm, setEditForm] = useState({})
+  const [editSaving, setEditSaving] = useState(false)
+  const [editMsg, setEditMsg] = useState('')
   const [allIssues, setAllIssues] = useState([])
   const [query, setQuery] = useState('')
   const [filter, setFilter] = useState('all')
@@ -33,9 +38,17 @@ export default function AdminPage() {
   }, [])
 
   const loadAll = async () => {
-    const [accRes, issRes] = await Promise.all([fetch('/api/schools'), fetch('/api/issues')])
+    const [accRes, issRes, ovRes] = await Promise.all([
+      fetch('/api/schools'),
+      fetch('/api/issues'),
+      fetch('/api/schools/overrides'),
+    ])
     if (accRes.ok) setAccounts(await accRes.json())
     if (issRes.ok) setAllIssues(await issRes.json())
+    if (ovRes.ok) {
+      const ovData = await ovRes.json()
+      if (Array.isArray(ovData)) setOverrides(Object.fromEntries(ovData.map(o => [o.school_id, o])))
+    }
   }
 
   const accountMap = useMemo(() => Object.fromEntries(accounts.map(a => [a.school_id, a])), [accounts])
@@ -382,6 +395,144 @@ export default function AdminPage() {
                 📥 Download Issues CSV
               </button>
             </div>
+          </div>
+        )}
+
+        {/* ── TAB 3: EDIT SCHOOL DETAILS ── */}
+        {tab === 3 && (
+          <div>
+            {/* Search to pick school */}
+            {!editSchool ? (
+              <div>
+                <p style={{fontSize:13,color:'var(--text2)',marginBottom:14,fontWeight:500}}>
+                  Select a school to edit its details. Changes override the original directory data and will show immediately in the tracker.
+                </p>
+                <div style={{display:'flex',flexDirection:'column',gap:8,maxHeight:520,overflowY:'auto'}}>
+                  {filteredSchools.map(school => {
+                    const ov = overrides[school.id]
+                    return (
+                      <div key={school.id} className="card" style={{padding:'13px 18px',cursor:'pointer',transition:'box-shadow .18s'}}
+                        onClick={() => {
+                          setEditSchool(school)
+                          setEditForm({
+                            principal:      ov?.principal      ?? school.principal ?? '',
+                            type:           ov?.type           ?? school.type ?? '',
+                            medium:         ov?.medium         ?? school.medium ?? '',
+                            students_m:     ov?.students_m     ?? school.students_m ?? 0,
+                            students_f:     ov?.students_f     ?? school.students_f ?? 0,
+                            teachers:       ov?.teachers       ?? school.teachers ?? 0,
+                            classification: ov?.classification ?? school.classification ?? '',
+                          })
+                          setEditMsg('')
+                        }}
+                        onMouseEnter={e=>e.currentTarget.style.boxShadow='var(--shadow)'}
+                        onMouseLeave={e=>e.currentTarget.style.boxShadow=''}>
+                        <div style={{display:'flex',alignItems:'center',gap:10}}>
+                          <div style={{flex:1}}>
+                            <span className="si" style={{fontWeight:700,fontSize:14,color:'var(--text)'}}>{school.name}</span>
+                            <span style={{fontSize:12,color:'var(--text2)',marginLeft:8}}>{school.address_en}</span>
+                          </div>
+                          {ov && <span style={{background:'#fff7ed',color:'#c2410c',fontSize:11,padding:'2px 8px',borderRadius:980,fontWeight:700,flexShrink:0}}>✏ Edited</span>}
+                          <span style={{color:'var(--text3)',fontSize:18}}>›</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            ) : (
+              /* EDIT FORM */
+              <div>
+                <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:22}}>
+                  <button className="btn btn-ghost btn-sm" onClick={() => { setEditSchool(null); setEditMsg('') }}>← Back</button>
+                  <div>
+                    <div className="si" style={{fontWeight:800,fontSize:16,color:'var(--text)'}}>{editSchool.name}</div>
+                    <div style={{fontSize:12,color:'var(--text2)'}}>{editSchool.address_en} · ID: {editSchool.id}</div>
+                  </div>
+                  {overrides[editSchool.id] && (
+                    <button className="btn btn-danger btn-sm" style={{marginLeft:'auto'}}
+                      onClick={async () => {
+                        if (!confirm('Restore original details for this school?')) return
+                        await fetch('/api/admin/school-details', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ school_id: editSchool.id }) })
+                        await loadAll()
+                        setEditMsg('✓ Restored to original directory data')
+                      }}>
+                      ↺ Restore Original
+                    </button>
+                  )}
+                </div>
+
+                <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))',gap:14,marginBottom:20}}>
+                  {[
+                    { key:'principal',      label:'Principal Name',    type:'text',   placeholder:'e.g. M.A. Perera' },
+                    { key:'type',           label:'School Type',       type:'text',   placeholder:'e.g. 1AB, 1C, 2, 3' },
+                    { key:'medium',         label:'Medium',            type:'text',   placeholder:'e.g. Sinhala, Tamil' },
+                    { key:'students_m',     label:'Male Students',     type:'number', placeholder:'0' },
+                    { key:'students_f',     label:'Female Students',   type:'number', placeholder:'0' },
+                    { key:'teachers',       label:'Total Teachers',    type:'number', placeholder:'0' },
+                    { key:'classification', label:'Classification',    type:'text',   placeholder:'e.g. ව.ප්‍රි.ම' },
+                  ].map(field => (
+                    <div key={field.key}>
+                      <label className="input-label">{field.label}</label>
+                      <input className="input" type={field.type} placeholder={field.placeholder}
+                        value={editForm[field.key] ?? ''}
+                        onChange={e => setEditForm(p => ({...p, [field.key]: field.type==='number' ? Number(e.target.value) : e.target.value}))}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Preview */}
+                <div style={{background:'var(--navy)',borderRadius:16,padding:'18px 22px',marginBottom:20}}>
+                  <p style={{fontSize:11,color:'rgba(255,255,255,0.4)',fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',marginBottom:12}}>Preview</p>
+                  <div className="si" style={{fontSize:17,fontWeight:800,color:'#fff',marginBottom:4}}>{editSchool.name}</div>
+                  <div style={{fontSize:12,color:'rgba(255,255,255,0.45)',marginBottom:12}}>{editSchool.address} · {editSchool.address_en}</div>
+                  <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+                    {[
+                      {l:'Principal', v: editForm.principal || '—'},
+                      {l:'Type',      v: editForm.type || '—'},
+                      {l:'Medium',    v: editForm.medium || '—'},
+                      {l:'Students',  v: ((Number(editForm.students_m)||0)+(Number(editForm.students_f)||0)).toLocaleString()},
+                      {l:'Teachers',  v: editForm.teachers || '—'},
+                      {l:'Grade',     v: editForm.classification || '—'},
+                    ].map(p => (
+                      <div key={p.l} style={{background:'rgba(255,255,255,0.09)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:8,padding:'5px 12px'}}>
+                        <span style={{fontSize:10,color:'rgba(255,255,255,0.4)',display:'block',textTransform:'uppercase',letterSpacing:'0.04em'}}>{p.l}</span>
+                        <span className="si" style={{fontSize:13,color:'#fff',fontWeight:600}}>{p.v}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {editMsg && (
+                  <div style={{background: editMsg.startsWith('✓') ? 'var(--green-light)' : 'var(--red-light)', color: editMsg.startsWith('✓') ? 'var(--green)' : 'var(--red)', padding:'10px 14px',borderRadius:10,fontSize:13,fontWeight:600,marginBottom:14,animation:'fadeUp .2s ease'}}>
+                    {editMsg}
+                  </div>
+                )}
+
+                <div style={{display:'flex',gap:10}}>
+                  <button className="btn btn-primary" disabled={editSaving}
+                    onClick={async () => {
+                      setEditSaving(true); setEditMsg('')
+                      const res = await fetch('/api/admin/school-details', {
+                        method:'POST', headers:{'Content-Type':'application/json'},
+                        body: JSON.stringify({ school_id: editSchool.id, ...editForm }),
+                      })
+                      if (res.ok) {
+                        await loadAll()
+                        setEditMsg('✓ School details updated successfully')
+                      } else {
+                        const d = await res.json()
+                        setEditMsg(`Error: ${d.error}`)
+                      }
+                      setEditSaving(false)
+                    }}>
+                    {editSaving ? '⏳ Saving...' : '💾 Save Changes'}
+                  </button>
+                  <button className="btn btn-ghost" onClick={() => { setEditSchool(null); setEditMsg('') }}>Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
