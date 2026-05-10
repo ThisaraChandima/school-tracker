@@ -306,7 +306,12 @@ export default function AnalyticsPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{searchResults.length} result{searchResults.length !== 1 ? 's' : ''} for "{searchQuery}"</span>
-                {searchMethod === 'ai' && (
+                {searchMethod && searchMethod !== 'none' && (
+                <span style={{fontSize:11,background:'#f5f3ff',color:'#7c3aed',padding:'2px 8px',borderRadius:20,fontWeight:700,border:'1px solid #ddd6fe'}}>
+                  🌐 Sinhala + English
+                </span>
+              )}
+              {searchMethod === 'ai' && (
                   <span style={{ fontSize: 11, background: '#f5f3ff', color: '#7c3aed', padding: '2px 8px', borderRadius: 20, fontWeight: 700, border: '1px solid #ddd6fe' }}>🤖 AI ranked</span>
                 )}
               </div>
