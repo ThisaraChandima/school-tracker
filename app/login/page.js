@@ -42,7 +42,7 @@ export default function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <div className="login-logo"><div style={{ width:34, height:34, borderRadius:8, overflow:'hidden', flexShrink:0 }}><Image src="/logo.png" alt="Logo" width={34} height={34} style={{ objectFit:'cover' }} priority /></div></div>
+        <div className="login-logo"><div style={{ width:40, height:40, borderRadius:8, overflow:'hidden', flexShrink:0 }}><Image src="/logo.png" alt="Logo" width={34} height={34} style={{ objectFit:'cover' }} priority /></div></div>
         <h1 className="login-title serif">Welcome back</h1>
         <p className="login-sub">Mawanella Education Zone · 2026</p>
 
