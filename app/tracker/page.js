@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image';
 import SCHOOLS from '@/lib/schools'
 
 export default function TrackerPage() {
