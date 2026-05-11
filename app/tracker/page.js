@@ -246,7 +246,7 @@ export default function TrackerPage() {
       <header className="topbar">
         <button className="menu-toggle" onClick={() => setSidebarOpen(true)}>☰</button>
         <div className="topbar-brand">
-          <div className="topbar-emblem">🏫</div>
+          <div className="topbar-emblem"><div style={{ width:34, height:34, borderRadius:8, overflow:'hidden', flexShrink:0 }}><Image src="/logo.png" alt="Logo" width={34} height={34} style={{ objectFit:'cover' }} priority /></div></div>
           <div><div className="topbar-title">Issue Tracker</div></div>
         </div>
         <div className="topbar-chips">

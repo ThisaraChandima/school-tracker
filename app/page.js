@@ -104,9 +104,23 @@ export default function HomePage() {
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Link href="/tracker" className="nav-link">View Issues</Link>
-          <Link href="/login" style={{ padding: '8px 18px', borderRadius: 8, fontSize: 14, fontWeight: 700, background: '#0f1f3d', color: '#fff', textDecoration: 'none', transition: 'opacity .18s' }}
+          <Link 
+            href="/login" 
+            style={{ 
+              padding: '8px 18px', 
+              borderRadius: 8, 
+              fontSize: 14, 
+              fontWeight: 700, 
+              background: '#0f1f3d', 
+              color: '#fff', 
+              textDecoration: 'none', 
+              transition: 'opacity .18s',
+              whiteSpace: 'nowrap', // Prevents "Sign In" from breaking into two lines
+              flexShrink: 0 // Prevents the button from squeezing on tiny screens
+            }}
             onMouseEnter={e => e.currentTarget.style.opacity = '.85'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
             Sign In
           </Link>
         </div>
