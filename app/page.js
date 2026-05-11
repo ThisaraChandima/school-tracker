@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import SCHOOLS from '@/lib/schools'
 
 function useCountUp(target, duration = 1200) {
@@ -98,7 +99,7 @@ export default function HomePage() {
       {/* ── NAV ── */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, height: 60, background: scrolled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1.5px solid #e5e7eb', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'box-shadow .25s', boxShadow: scrolled ? '0 1px 12px rgba(0,0,0,0.06)' : 'none' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <div style={{ width: 34, height: 34, background: '#0f1f3d', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🏫</div>
+          <div style={{ width:34, height:34, borderRadius:8, overflow:'hidden', flexShrink:0 }}><Image src="/logo.png" alt="Logo" width={34} height={34} style={{ objectFit:'cover' }} priority /></div>
           <span style={{ fontSize: 17, fontWeight: 800, color: '#111827', letterSpacing: '-0.03em' }}>School Tracker</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>

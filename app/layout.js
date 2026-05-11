@@ -1,8 +1,32 @@
 import './globals.css'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/next'
+import { Plus_Jakarta_Sans, Noto_Sans_Sinhala } from 'next/font/google'
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+  variable: '--font-jakarta',
+})
+
+const sinhala = Noto_Sans_Sinhala({
+  subsets: ['sinhala'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-sinhala',
+})
 
 export const metadata = {
   title: 'School Issue Tracker — Mawanella Zone 2026',
   description: 'Mawanella Education Zone School Issue Tracker',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/favicon-32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: { url: '/apple-icon.png', sizes: '180x180' },
+  },
 }
 
 export const viewport = {
@@ -13,13 +37,12 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Noto+Sans+Sinhala:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
-      <body>{children}</body>
+    <html lang="en" className={`${jakarta.variable} ${sinhala.variable}`}>
+      <body>
+        {children}
+        <SpeedInsights />
+        <Analytics />
+      </body>
     </html>
   )
 }
