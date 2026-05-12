@@ -5,11 +5,18 @@ import { getAuthInfo } from '@/lib/auth'
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const school_id = searchParams.get('school_id')
+
   let q = supabase.from('issues').select('*').order('created_at', { ascending: false })
   if (school_id) q = q.eq('school_id', Number(school_id))
+
   const { data, error } = await q
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json(data)
+
+  return NextResponse.json(data, {
+    headers: {
+      'Cache-Control': 'public, s-maxage=20, stale-while-revalidate=40',
+    }
+  })
 }
 
 export async function POST(request) {
