@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase'
 
-// Returns only {school_id, open, done} counts — much faster than fetching all issues
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   const { data, error } = await supabase
     .from('issues')
@@ -16,8 +17,6 @@ export async function GET() {
   })
 
   return NextResponse.json(counts, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=60',
-    }
+    headers: { 'Cache-Control': 'no-store' }
   })
 }
