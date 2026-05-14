@@ -96,17 +96,33 @@ export default function HomePage() {
         a.nav-link:hover { background:#f3f4f6; }
       `}</style>
 
-      {/* NAV */}
+       {/* ── NAV ── */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, height: 60, background: scrolled ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderBottom: '1.5px solid #e5e7eb', padding: '0 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', transition: 'box-shadow .25s', boxShadow: scrolled ? '0 1px 12px rgba(0,0,0,0.06)' : 'none' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <div style={{ width: 36, height: 36, borderRadius: 9, overflow: 'hidden', flexShrink: 0 }}>
-            <Image src="/logo.png" alt="Logo" width={36} height={36} style={{ objectFit: 'cover' }} priority />
-          </div>
+          <div style={{ width:34, height:34, borderRadius:8, overflow:'hidden', flexShrink:0 }}><Image src="/logo.png" alt="Logo" width={34} height={34} style={{ objectFit:'cover' }} priority /></div>
           <span style={{ fontSize: 17, fontWeight: 800, color: '#111827', letterSpacing: '-0.03em' }}>School Tracker</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <Link href="/tracker" className="nav-link">View Issues</Link>
-          <Link href="/login" style={{ padding: '8px 18px', borderRadius: 8, fontSize: 14, fontWeight: 700, background: '#0f1f3d', color: '#fff', textDecoration: 'none' }}>Sign In</Link>
+          <Link 
+            href="/login" 
+            style={{ 
+              padding: '8px 18px', 
+              borderRadius: 8, 
+              fontSize: 14, 
+              fontWeight: 700, 
+              background: '#0f1f3d', 
+              color: '#fff', 
+              textDecoration: 'none', 
+              transition: 'opacity .18s',
+              whiteSpace: 'nowrap', // Prevents "Sign In" from breaking into two lines
+              flexShrink: 0 // Prevents the button from squeezing on tiny screens
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '.85'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            Sign In
+          </Link>
         </div>
       </nav>
 
