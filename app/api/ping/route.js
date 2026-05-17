@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import supabase from '@/lib/supabase'
 
+export const dynamic = 'force-dynamic'
+
 // This endpoint keeps Supabase active — hit it daily via cron-job.org
 // URL: https://mavanella-zone.vercel.app/api/ping
 export async function GET() {
@@ -16,7 +18,7 @@ export async function GET() {
       message: 'Database is active',
       issues_count: count,
       timestamp: new Date().toISOString(),
-    })
+    }, { headers: { 'Cache-Control': 'no-store' } })
   } catch (e) {
     return NextResponse.json({
       status: 'error',
